@@ -12,15 +12,20 @@ async def main(page: ft.Page):
     selected_file_path = None
     server_ip = "https://194.87.82.136:2053/BaDwafiFKsYBKp4XwK/"  # Твой IP сервера
 
-    # Контроллеры ввода
+    # Контроллеры ввода (ИСПРАВЛЕНО: prefix_text заменен на prefix с текстовым виджетом)
     key_input = ft.TextField(label="Ваш VLESS-ключ", border_color="#242438", focused_border_color="#00D2FF")
-    phone_input = ft.TextField(label="Номер телефона (для оплаты)", prefix_text="+", border_color="#242438", focused_border_color="#00D2FF")
+    phone_input = ft.TextField(
+        label="Номер телефона (для оплаты)", 
+        prefix=ft.Text("+"), 
+        border_color="#242438", 
+        focused_border_color="#00D2FF"
+    )
     
     # Текст статуса
     status_text = ft.Text("ОТКЛЮЧЕНО", size=24, color=ft.colors.RED, weight=ft.FontWeight.BOLD)
     shield_icon = ft.Icon(name=ft.icons.SHIELD_OUTLINED, color="#00D2FF", size=100)
 
-    # Функция вызова уведомлений (исправлен AlertDialog)
+    # Функция вызова уведомлений
     def show_alert(text):
         def close_dialog(e):
             dialog.open = False
@@ -66,8 +71,8 @@ async def main(page: ft.Page):
     # Логика выбора файла чека
     def on_file_result(e: ft.FilePickerResultEvent):
         nonlocal selected_file_path
-        if e.files and e.files[0].path:
-            selected_file_path = e.files[0].path
+        if e.files and e.files.path:
+            selected_file_path = e.files.path
             file_btn.text = "Чек выбран ✓"
             file_btn.disabled = True
             page.update()
@@ -167,7 +172,6 @@ async def main(page: ft.Page):
     )
 
     def on_tab_change(e):
-        # Исправлено имя свойства под версию 1.0.4
         if e.control.selected_index == 0:
             main_container.content = main_layout
         else:
@@ -189,5 +193,4 @@ async def main(page: ft.Page):
     page.navigation_bar = tabs
     page.update()
 
-# СТРОГО ОБЯЗАТЕЛЬНО ДЛЯ СБОРКИ НА ANDROID ЧЕРЕЗ SERIOUS_PYTHON
 ft.run(main)
