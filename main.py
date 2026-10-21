@@ -7,13 +7,17 @@ async def main(page: ft.Page):
     page.background_color = "#0B0B0E"
     page.theme_mode = ft.ThemeMode.DARK
     
-    # Переменные состояния
+    # Константы конфигурации и состояния
     is_connected = False
     selected_file_path = None
-    server_ip = "https://194.87.82.136:2053/BaDwafiFKsYBKp4XwK/"  # Твой IP сервера
+    server_ip = "https://194.87.82.136:2053/BaDwafiFKsYBKp4XwK/"  # Выделенный IP-адрес вашего сервера
 
-    # Контроллеры ввода
-    key_input = ft.TextField(label="Ваш VLESS-ключ", border_color="#242438", focused_border_color="#00D2FF")
+    # Компоненты пользовательского ввода
+    key_input = ft.TextField(
+        label="Ваш VLESS-ключ", 
+        border_color="#242438", 
+        focused_border_color="#00D2FF"
+    )
     phone_input = ft.TextField(
         label="Номер телефона (для оплаты)", 
         prefix=ft.Text("+"), 
@@ -21,11 +25,11 @@ async def main(page: ft.Page):
         focused_border_color="#00D2FF"
     )
     
-    # Текст статуса
+    # Элементы отображения статуса соединения
     status_text = ft.Text("ОТКЛЮЧЕНО", size=24, color=ft.Colors.RED, weight=ft.FontWeight.BOLD)
-    shield_icon = ft.Icon(name=ft.icons.SHIELD, color="#00D2FF", size=100)
+    shield_icon = ft.Icon(name="shield", color="#00D2FF", size=100)
 
-    # Функция вызова уведомлений
+    # Системное окно уведомлений (AlertDialog адаптирован под v1.0.4)
     def show_alert(text):
         def close_dialog(e):
             dialog.open = False
@@ -40,7 +44,7 @@ async def main(page: ft.Page):
         dialog.open = True
         page.update()
 
-    # Логика кнопки Подключить
+    # Управление переключением состояния VPN-туннеля
     def toggle_vpn(e):
         nonlocal is_connected
         if not key_input.value.strip():
@@ -68,10 +72,11 @@ async def main(page: ft.Page):
         on_click=toggle_vpn
     )
 
-    # Логика выбора файла чека (ИСПРАВЛЕНО: берем первый файл из списка e.files[0])
+    # Логика обработки результатов выбора файла из памяти устройства
     def on_file_result(e: ft.FilePickerResultEvent):
         nonlocal selected_file_path
         if e.files and len(e.files) > 0:
+            # Исправлено обращение к структуре данных: извлекаем путь из первого элемента списка
             selected_file_path = e.files[0].path
             file_btn.text = "Чек выбран ✓"
             file_btn.disabled = True
@@ -83,12 +88,12 @@ async def main(page: ft.Page):
 
     file_btn = ft.OutlinedButton(
         text="Выбрать скриншот чека",
-        icon=ft.icons.ATTACH_FILE,
+        icon="attach_file",
         width=400,
         on_click=lambda _: file_picker.pick_files(allow_multiple=False)
     )
 
-    # Опрос сервера (Поллинг)
+    # Асинхронный цикл фонового опроса сервера (Поллинг)
     async def check_activation_loop(phone):
         while True:
             await asyncio.sleep(3)
@@ -110,7 +115,7 @@ async def main(page: ft.Page):
             except Exception:
                 pass
 
-    # Отправка чека
+    # Инициализация процесса отправки платежа администратору
     async def send_payment(e):
         if not phone_input.value.strip():
             show_alert("Введите номер телефона!")
@@ -131,7 +136,7 @@ async def main(page: ft.Page):
         on_click=send_payment
     )
 
-    # Вкладки приложения
+    # Разметка главного экрана VPN
     main_layout = ft.Column(
         alignment=ft.MainAxisAlignment.CENTER,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -147,11 +152,12 @@ async def main(page: ft.Page):
         ]
     )
 
+    # Разметка экрана оплаты подписки
     buy_layout = ft.Column(
         alignment=ft.MainAxisAlignment.CENTER,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         controls=[
-            ft.Icon(name=ft.icons.ACCOUNT_BALANCE_WALLET_OUTLINED, color="#00D2FF", size=80),
+            ft.Icon(name="account_balance_wallet_outlined", color="#00D2FF", size=80),
             ft.Text("Активация подписки", size=24, weight=ft.FontWeight.BOLD),
             ft.Text("Стоимость: 249 рублей / месяц", color=ft.Colors.WHITE70),
             ft.Container(
@@ -171,6 +177,7 @@ async def main(page: ft.Page):
         ]
     )
 
+    # Логика переключения отображаемого контейнера по вкладкам
     def on_tab_change(e):
         if e.control.selected_index == 0:
             main_container.content = main_layout
@@ -178,11 +185,11 @@ async def main(page: ft.Page):
             main_container.content = buy_layout
         page.update()
 
-    # ИСПРАВЛЕНО: NavigationBarDestination изменен на чистый NavigationDestination
+    # Нижняя навигационная панель (Используются безопасные строковые имена иконок)
     tabs = ft.NavigationBar(
         destinations=[
-            ft.NavigationDestination(icon=ft.icons.VPN_LOCK, label="VPN"),
-            ft.NavigationDestination(icon=ft.icons.SHOPPING_BAG, label="Купить подписку"),
+            ft.NavigationDestination(icon="vpn_lock", label="VPN"),
+            ft.NavigationDestination(icon="shopping_bag", label="Купить подписку"),
         ],
         on_change=on_tab_change,
         bgcolor="#16161F"
@@ -194,4 +201,5 @@ async def main(page: ft.Page):
     page.navigation_bar = tabs
     page.update()
 
+# Точка входа для мобильных платформ Android/iOS под управлением runtime Serious Python
 ft.run(main)
