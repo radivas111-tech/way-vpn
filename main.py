@@ -12,7 +12,7 @@ async def main(page: ft.Page):
     selected_file_path = None
     server_ip = "https://194.87.82.136:2053/BaDwafiFKsYBKp4XwK/"  # Твой IP сервера
 
-    # Контроллеры ввода (ИСПРАВЛЕНО: prefix_text заменен на prefix с текстовым виджетом)
+    # Контроллеры ввода
     key_input = ft.TextField(label="Ваш VLESS-ключ", border_color="#242438", focused_border_color="#00D2FF")
     phone_input = ft.TextField(
         label="Номер телефона (для оплаты)", 
@@ -22,8 +22,8 @@ async def main(page: ft.Page):
     )
     
     # Текст статуса
-    status_text = ft.Text("ОТКЛЮЧЕНО", size=24, color=ft.colors.RED, weight=ft.FontWeight.BOLD)
-    shield_icon = ft.Icon(name=ft.icons.SHIELD_OUTLINED, color="#00D2FF", size=100)
+    status_text = ft.Text("ОТКЛЮЧЕНО", size=24, color=ft.Colors.RED, weight=ft.FontWeight.BOLD)
+    shield_icon = ft.Icon(name=ft.icons.SHIELD, color="#00D2FF", size=100)
 
     # Функция вызова уведомлений
     def show_alert(text):
@@ -49,12 +49,12 @@ async def main(page: ft.Page):
         is_connected = not is_connected
         if is_connected:
             status_text.value = "ПОДКЛЮЧЕНО"
-            status_text.color = ft.colors.GREEN
+            status_text.color = ft.Colors.GREEN
             connect_btn.text = "ОТКЛЮЧИТЬ"
-            connect_btn.bgcolor = ft.colors.RED
+            connect_btn.bgcolor = ft.Colors.RED
         else:
             status_text.value = "ОТКЛЮЧЕНО"
-            status_text.color = ft.colors.RED
+            status_text.color = ft.Colors.RED
             connect_btn.text = "ПОДКЛЮЧИТЬ"
             connect_btn.bgcolor = "#00D2FF"
         page.update()
@@ -62,17 +62,17 @@ async def main(page: ft.Page):
     connect_btn = ft.ElevatedButton(
         text="ПОДКЛЮЧИТЬ",
         bgcolor="#00D2FF",
-        color=ft.colors.BLACK,
+        color=ft.Colors.BLACK,
         width=250,
         height=60,
         on_click=toggle_vpn
     )
 
-    # Логика выбора файла чека
+    # Логика выбора файла чека (ИСПРАВЛЕНО: берем первый файл из списка e.files[0])
     def on_file_result(e: ft.FilePickerResultEvent):
         nonlocal selected_file_path
-        if e.files and e.files.path:
-            selected_file_path = e.files.path
+        if e.files and len(e.files) > 0:
+            selected_file_path = e.files[0].path
             file_btn.text = "Чек выбран ✓"
             file_btn.disabled = True
             page.update()
@@ -125,7 +125,7 @@ async def main(page: ft.Page):
     send_btn = ft.ElevatedButton(
         text="ОТПРАВИТЬ НА ПРОВЕРКУ",
         bgcolor="#00D2FF",
-        color=ft.colors.BLACK,
+        color=ft.Colors.BLACK,
         width=400,
         height=50,
         on_click=send_payment
@@ -138,7 +138,7 @@ async def main(page: ft.Page):
         controls=[
             shield_icon,
             ft.Text("WAY VPN", size=32, weight=ft.FontWeight.BOLD, color="#00D2FF"),
-            ft.Text("Статус соединения:", color=ft.colors.WHITE60),
+            ft.Text("Статус соединения:", color=ft.Colors.WHITE60),
             status_text,
             ft.Container(height=20),
             key_input,
@@ -153,7 +153,7 @@ async def main(page: ft.Page):
         controls=[
             ft.Icon(name=ft.icons.ACCOUNT_BALANCE_WALLET_OUTLINED, color="#00D2FF", size=80),
             ft.Text("Активация подписки", size=24, weight=ft.FontWeight.BOLD),
-            ft.Text("Стоимость: 249 рублей / месяц", color=ft.colors.WHITE70),
+            ft.Text("Стоимость: 249 рублей / месяц", color=ft.Colors.WHITE70),
             ft.Container(
                 content=ft.Text(
                     "Переведите 249₽ по номеру телефона:\n+7 (964) 073-05-51\n\nПосле оплаты прикрепите скриншот чека ниже.",
@@ -178,10 +178,11 @@ async def main(page: ft.Page):
             main_container.content = buy_layout
         page.update()
 
+    # ИСПРАВЛЕНО: NavigationBarDestination изменен на чистый NavigationDestination
     tabs = ft.NavigationBar(
         destinations=[
-            ft.NavigationBarDestination(icon=ft.icons.VPN_LOCK, label="VPN"),
-            ft.NavigationBarDestination(icon=ft.icons.SHOPPING_BAG, label="Купить подписку"),
+            ft.NavigationDestination(icon=ft.icons.VPN_LOCK, label="VPN"),
+            ft.NavigationDestination(icon=ft.icons.SHOPPING_BAG, label="Купить подписку"),
         ],
         on_change=on_tab_change,
         bgcolor="#16161F"
