@@ -6,13 +6,11 @@ async def main(page: ft.Page):
     page.title = "Way VPN"
     page.background_color = "#0B0B0E"
     page.theme_mode = ft.ThemeMode.DARK
-    page.window_width = 400
-    page.window_height = 800
     
     # Переменные состояния
     is_connected = False
     selected_file_path = None
-    server_ip = "https://194.87.82.136:2053/BaDwafiFKsYBKp4XwK/"  # Замени на свой IP
+    server_ip = "https://194.87.82.136:2053/BaDwafiFKsYBKp4XwK/"  # Твой IP сервера
 
     # Контроллеры ввода
     key_input = ft.TextField(label="Ваш VLESS-ключ", border_color="#242438", focused_border_color="#00D2FF")
@@ -22,11 +20,16 @@ async def main(page: ft.Page):
     status_text = ft.Text("ОТКЛЮЧЕНО", size=24, color=ft.colors.RED, weight=ft.FontWeight.BOLD)
     shield_icon = ft.Icon(name=ft.icons.SHIELD_OUTLINED, color="#00D2FF", size=100)
 
-    # Функция вызова уведомлений
+    # Функция вызова уведомлений (исправлен AlertDialog)
     def show_alert(text):
+        def close_dialog(e):
+            dialog.open = False
+            page.update()
+
         dialog = ft.AlertDialog(
             title=ft.Text("Уведомление", color="#00D2FF"),
             content=ft.Text(text),
+            actions=[ft.TextButton("OK", on_click=close_dialog)]
         )
         page.dialog = dialog
         dialog.open = True
@@ -63,7 +66,7 @@ async def main(page: ft.Page):
     # Логика выбора файла чека
     def on_file_result(e: ft.FilePickerResultEvent):
         nonlocal selected_file_path
-        if e.files:
+        if e.files and e.files[0].path:
             selected_file_path = e.files[0].path
             file_btn.text = "Чек выбран ✓"
             file_btn.disabled = True
@@ -86,13 +89,14 @@ async def main(page: ft.Page):
             await asyncio.sleep(3)
             try:
                 async with httpx.AsyncClient() as client:
-                    res = await client.get(f"http://{server_ip}/api/check/{phone}")
+                    res = await client.get(f"http://{server_ip}:8000/api/check/{phone}")
                     if res.status_code == 200:
                         data = res.json()
                         if data.get("status") == "approved":
                             key_input.value = data.get("key", "")
                             show_alert("🚀 ДОСТУП АКТИВИРОВАН! Нажмите ПОДКЛЮЧИТЬ!")
                             tabs.selected_index = 0
+                            main_container.content = main_layout
                             page.update()
                             break
                         elif data.get("status") == "declined":
@@ -111,8 +115,6 @@ async def main(page: ft.Page):
             return
         
         show_alert("Чек отправлен! Ожидайте проверку...")
-        
-        # Запускаем фоновый опрос
         asyncio.create_task(check_activation_loop(phone_input.value.strip()))
 
     send_btn = ft.ElevatedButton(
@@ -165,6 +167,7 @@ async def main(page: ft.Page):
     )
 
     def on_tab_change(e):
+        # Исправлено имя свойства под версию 1.0.4
         if e.control.selected_index == 0:
             main_container.content = main_layout
         else:
@@ -186,5 +189,5 @@ async def main(page: ft.Page):
     page.navigation_bar = tabs
     page.update()
 
-if __name__ == "__main__":
-    ft.app(target=main)
+# СТРОГО ОБЯЗАТЕЛЬНО ДЛЯ СБОРКИ НА ANDROID ЧЕРЕЗ SERIOUS_PYTHON
+ft.run(main)
